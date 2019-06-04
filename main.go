@@ -10,6 +10,12 @@ type ChapterInfo struct {
 	URL           string
 	LastUpdate    string
 	ChapterTitle  string
+	ChapterImages *[]ChapterImage
+}
+
+type ChapterImage struct {
+	ImageNo  int
+	ImageUrl string
 }
 
 // Uniqfy the Slices
@@ -55,7 +61,6 @@ func ChapterInfoExtractor() *[]ChapterInfo {
 			}
 		})
 		info = append(info, tmp)
-		fmt.Printf("%+v\n", tmp)
 	})
 
 	c.OnRequest(func(r *colly.Request) {
@@ -65,9 +70,56 @@ func ChapterInfoExtractor() *[]ChapterInfo {
 	// Visiting
 	c.Visit(url)
 	c.Wait()
-	return &info
+	uniqInfo := unique(info)
+	return &uniqInfo
+}
+
+func ExtractChapterImages(chapInfo *[]ChapterInfo) {
+	baseURL := "https://hanascan.com/"
+
+	c := colly.NewCollector(
+		colly.AllowedDomains("hanascan.com"),
+		// colly.Async(true),
+		// colly.MaxDepth(10),
+	)
+
+	c.Limit(&colly.LimitRule{
+		DomainGlob: "*",
+		// Parallelism: 10,
+		Delay: 5,
+	})
+	index := -1
+	c.OnHTML("#content", func(e *colly.HTMLElement) {
+		images := []ChapterImage{}
+		tmp := ChapterImage{}
+		e.ForEach("img", func(count int, elem *colly.HTMLElement) {
+			tmp.ImageNo = count + 1
+			tmp.ImageUrl = elem.Attr("data-original")
+			images = append(images, tmp)
+		})
+		fmt.Printf("Index: %d\n", index)
+		(*chapInfo)[index].ChapterImages = &images
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting..", r.URL.String())
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		index++
+	})
+
+	for _, data := range *chapInfo {
+		c.Visit(baseURL + data.URL)
+		c.Wait()
+	}
+	//c.Wait()
+	// fmt.Printf("%+v\n", images)
+
+	fmt.Println("%+v\n", (*chapInfo))
 }
 
 func main() {
-	ChapterInfoExtractor()
+	chapInfo := ChapterInfoExtractor()
+	ExtractChapterImages(chapInfo)
 }
