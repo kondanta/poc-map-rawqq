@@ -7,9 +7,22 @@ import (
 )
 
 type ChapterInfo struct {
-	URL          string
-	LastUpdate   string
-	ChapterTitle string
+	URL           string
+	LastUpdate    string
+	ChapterTitle  string
+}
+
+// Uniqfy the Slices
+func unique(intSlice []ChapterInfo) []ChapterInfo {
+	keys := make(map[ChapterInfo]bool)
+	list := []ChapterInfo{}
+	for _, entry := range intSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func ChapterInfoExtractor() *[]ChapterInfo {
