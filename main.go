@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -11,8 +12,9 @@ var baseURL = "https://hanascan.com/"
 
 // Manga ...
 type Manga struct {
-	Title string
-	URL   string
+	Title       string
+	URL         string
+	ChapterInfo *[]ChapterInfo
 }
 
 // ChapterInfo holds chapter's static information along with the image links
@@ -44,9 +46,8 @@ func unique(intSlice []ChapterInfo) []ChapterInfo {
 
 // ChapterInfoExtractor extracts the static information:
 // Name, Last update and Chapter Name/No
-func ChapterInfoExtractor() *[]ChapterInfo {
-	// TODO: Make this url dynamic
-	url := "https://hanascan.com/manga-chiyu-mahou-no-machigatta-tsukaikata-senjou-wo-kakeru-kaifuku-youin-raw.html"
+func ChapterInfoExtractor(chapterUrl string) *[]ChapterInfo {
+	url := baseURL + chapterUrl
 	info := []ChapterInfo{}
 
 	c := colly.NewCollector(
@@ -85,11 +86,14 @@ func ChapterInfoExtractor() *[]ChapterInfo {
 	c.Visit(url)
 	c.Wait()
 	uniqInfo := unique(info)
+	// extractChapterImages works with the address of the ChapterInfo variable
+	// so we can call this function here and return one single unified variable.
+	// extractChapterImages(&uniqInfo)
 	return &uniqInfo
 }
 
-// ExtractChapterImages strip image links from the given chapter url
-func ExtractChapterImages(chapInfo *[]ChapterInfo) {
+// extractChapterImages strip image links from the given chapter url
+func extractChapterImages(chapInfo *[]ChapterInfo) {
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("hanascan.com"),
@@ -133,7 +137,6 @@ func ExtractChapterImages(chapInfo *[]ChapterInfo) {
 	fmt.Println("%+v\n", (*chapInfo))
 }
 
-// TODO: Implement Search Logic
 // TODO: Create robot.txt for crawling all existing mangas.
 // TODO: Think about the database and its integration
 
@@ -161,6 +164,7 @@ func Searchmanga(mangaName string) {
 		e.ForEach("#tables", func(count int, elem *colly.HTMLElement) {
 			manga.URL = elem.ChildAttr("a", "href")
 			manga.Title = elem.Text
+			manga.ChapterInfo = nil /*ChapterInfoExtractor(manga.URL)*/
 			mangas = append(mangas, manga)
 		})
 
@@ -178,8 +182,11 @@ func Searchmanga(mangaName string) {
 func querySanitizer(query string) string {
 	return strings.Replace(query, " ", "+", -1)
 }
+
 func main() {
+	// ChapterInfoExtractor is for mangapplizer. As for tracker, its not needed "yet"
 	// chapInfo := ChapterInfoExtractor()
 	// ExtractChapterImages(chapInfo)
-	Searchmanga("chiyu mah")
+	searchArg := os.Args[1]
+	Searchmanga(searchArg)
 }
