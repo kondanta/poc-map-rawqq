@@ -2,10 +2,20 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gocolly/colly"
 )
 
+var baseURL = "https://hanascan.com/"
+
+// Manga ...
+type Manga struct {
+	Title string
+	URL   string
+}
+
+// ChapterInfo holds chapter's static information along with the image links
 type ChapterInfo struct {
 	URL           string
 	LastUpdate    string
@@ -13,9 +23,10 @@ type ChapterInfo struct {
 	ChapterImages *[]ChapterImage
 }
 
+// ChapterImage holds image information of the specified  chapter
 type ChapterImage struct {
 	ImageNo  int
-	ImageUrl string
+	ImageURL string
 }
 
 // Uniqfy the Slices
@@ -31,7 +42,10 @@ func unique(intSlice []ChapterInfo) []ChapterInfo {
 	return list
 }
 
+// ChapterInfoExtractor extracts the static information:
+// Name, Last update and Chapter Name/No
 func ChapterInfoExtractor() *[]ChapterInfo {
+	// TODO: Make this url dynamic
 	url := "https://hanascan.com/manga-chiyu-mahou-no-machigatta-tsukaikata-senjou-wo-kakeru-kaifuku-youin-raw.html"
 	info := []ChapterInfo{}
 
@@ -74,8 +88,8 @@ func ChapterInfoExtractor() *[]ChapterInfo {
 	return &uniqInfo
 }
 
+// ExtractChapterImages strip image links from the given chapter url
 func ExtractChapterImages(chapInfo *[]ChapterInfo) {
-	baseURL := "https://hanascan.com/"
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("hanascan.com"),
@@ -94,7 +108,7 @@ func ExtractChapterImages(chapInfo *[]ChapterInfo) {
 		tmp := ChapterImage{}
 		e.ForEach("img", func(count int, elem *colly.HTMLElement) {
 			tmp.ImageNo = count + 1
-			tmp.ImageUrl = elem.Attr("data-original")
+			tmp.ImageURL = elem.Attr("data-original")
 			images = append(images, tmp)
 		})
 		fmt.Printf("Index: %d\n", index)
@@ -119,7 +133,53 @@ func ExtractChapterImages(chapInfo *[]ChapterInfo) {
 	fmt.Println("%+v\n", (*chapInfo))
 }
 
+// TODO: Implement Search Logic
+// TODO: Create robot.txt for crawling all existing mangas.
+// TODO: Think about the database and its integration
+
+// Searchmanga searches manga with the given name
+func Searchmanga(mangaName string) {
+	mangaName = querySanitizer(mangaName)
+	query := "manga-list.html?m_status=&author=&group=&name=" + mangaName + "&genre=&ungenre="
+	url := baseURL + query
+	mangas := []Manga{}
+
+	c := colly.NewCollector(
+		colly.AllowedDomains("hanascan.com"),
+		colly.Async(true),
+		colly.MaxDepth(10),
+	)
+
+	c.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 10,
+		Delay:       5,
+	})
+
+	c.OnHTML(".row .top", func(e *colly.HTMLElement) {
+		manga := Manga{}
+		e.ForEach("#tables", func(count int, elem *colly.HTMLElement) {
+			manga.URL = elem.ChildAttr("a", "href")
+			manga.Title = elem.Text
+			mangas = append(mangas, manga)
+		})
+
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting..", r.URL.String())
+	})
+
+	c.Visit(url)
+	c.Wait()
+	fmt.Println("%+v\n", mangas)
+}
+
+func querySanitizer(query string) string {
+	return strings.Replace(query, " ", "+", -1)
+}
 func main() {
-	chapInfo := ChapterInfoExtractor()
-	ExtractChapterImages(chapInfo)
+	// chapInfo := ChapterInfoExtractor()
+	// ExtractChapterImages(chapInfo)
+	Searchmanga("chiyu mah")
 }
