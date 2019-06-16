@@ -48,8 +48,8 @@ func unique(intSlice []ChapterInfo) []ChapterInfo {
 
 // ChapterInfoExtractor extracts the static information:
 // Name, Last update and Chapter Name/No
-func ChapterInfoExtractor(chapterUrl string) *[]ChapterInfo {
-	url := baseURL + chapterUrl
+func ChapterInfoExtractor(chapterURL string) *[]ChapterInfo {
+	url := baseURL + chapterURL
 	info := []ChapterInfo{}
 
 	c := colly.NewCollector(
@@ -136,14 +136,14 @@ func extractChapterImages(chapInfo *[]ChapterInfo) {
 	//c.Wait()
 	// fmt.Printf("%+v\n", images)
 
-	fmt.Println("%+v\n", (*chapInfo))
+	// fmt.Println("%+v\n", (*chapInfo))
 }
 
 // TODO: Create robot.txt for crawling all existing mangas.
 // TODO: Think about the database and its integration
 
 // Searchmanga searches manga with the given name
-func Searchmanga(mangaName string) {
+func Searchmanga(mangaName string) *[]Manga {
 	mangaName = querySanitizer(mangaName)
 	query := "manga-list.html?m_status=&author=&group=&name=" + mangaName + "&genre=&ungenre="
 	url := baseURL + query
@@ -189,7 +189,9 @@ func Searchmanga(mangaName string) {
 
 	c.Visit(url)
 	c.Wait()
-	fmt.Println("%+v\n", mangas)
+	// fmt.Println("%+v\n", mangas)
+
+	return &mangas
 }
 
 func querySanitizer(query string) string {
