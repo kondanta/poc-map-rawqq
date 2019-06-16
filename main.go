@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -14,6 +15,7 @@ var baseURL = "https://hanascan.com/"
 type Manga struct {
 	Title       string
 	URL         string
+	LastChapter int
 	ChapterInfo *[]ChapterInfo
 }
 
@@ -159,9 +161,20 @@ func Searchmanga(mangaName string) {
 		Delay:       5,
 	})
 
-	c.OnHTML(".row .top", func(e *colly.HTMLElement) {
+	c.OnHTML(".row .top .media-body", func(e *colly.HTMLElement) {
 		manga := Manga{}
-		e.ForEach("#tables", func(count int, elem *colly.HTMLElement) {
+		// Finding the latest chapter on search page
+		e.ForEach("a", func(_ int, elem *colly.HTMLElement) {
+			num := elem.Text
+			// This bunch has also genres such as Action, Adventure. The last element is the
+			// latest chapter.
+			if res, err := strconv.Atoi(num); err == nil {
+				manga.LastChapter = res
+			}
+		})
+
+		// Create the view for search result
+		e.ForEach("#tables", func(_ int, elem *colly.HTMLElement) {
 			manga.URL = elem.ChildAttr("a", "href")
 			manga.Title = elem.Text
 			manga.ChapterInfo = nil /*ChapterInfoExtractor(manga.URL)*/
