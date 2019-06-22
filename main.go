@@ -189,7 +189,7 @@ func Searchmanga(mangaName string) *[]Manga {
 
 	c.Visit(url)
 	c.Wait()
-	// fmt.Println("%+v\n", mangas)
+	fmt.Printf("%+v\n", mangas)
 
 	return &mangas
 }
