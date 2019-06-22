@@ -207,4 +207,5 @@ func main() {
 	} else {
 		panic("Need a name for the manga that is going to be searched!")
 	}
+	sendPostQueryToAnilist()
 }
