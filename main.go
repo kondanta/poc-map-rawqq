@@ -200,8 +200,11 @@ func querySanitizer(query string) string {
 
 func main() {
 	// ChapterInfoExtractor is for mangapplizer. As for tracker, its not needed "yet"
-	// chapInfo := ChapterInfoExtractor()
-	// ExtractChapterImages(chapInfo)
-	searchArg := os.Args[1]
-	Searchmanga(searchArg)
+	//chapInfo := ChapterInfoExtractor()
+	//ExtractChapterImages(chapInfo)
+	if len(os.Args) > 1 {
+		Searchmanga(os.Args[1])
+	} else {
+		panic("Need a name for the manga that is going to be searched!")
+	}
 }
