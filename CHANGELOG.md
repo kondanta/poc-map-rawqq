@@ -1,3 +1,6 @@
+## 0.3.0 (June 22, 2019)
+Add anilist data poll mechanism's POC.
+
 ## 0.2.1 (June 22, 2019)
 
 
