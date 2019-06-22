@@ -1,3 +1,6 @@
+## 0.4.0 (June 22, 2019)
+Anilist API response handler added
+
 ## 0.3.0 (June 22, 2019)
 Add anilist data poll mechanism's POC.
 
