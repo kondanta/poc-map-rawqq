@@ -1,3 +1,6 @@
+## 0.4.1 (June 22, 2019)
+Fix anilist query. Fetch all of the necessary data.
+
 ## 0.4.0 (June 22, 2019)
 Anilist API response handler added
 
